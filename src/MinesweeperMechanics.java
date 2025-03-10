@@ -2,9 +2,9 @@ import java.util.ArrayList;
 
 public class MinesweeperMechanics
 {
-    private int width;
-    private int height;
-    private int mineNum;
+    private final int width;
+    private final int height;
+    private final int mineNum;
     private int[][] mineBoard;
     private char[][] discoveryBoard;
     private ArrayList<int[]> emptyTiles;
@@ -18,6 +18,7 @@ public class MinesweeperMechanics
         discoveryBoard = new char[height][width];
         emptyTiles = new ArrayList<>();
         populateBoard();
+        openInitialTiles();
     }
     private void populateBoard()
     {
@@ -73,6 +74,94 @@ public class MinesweeperMechanics
         }
         return numOfMines;
     }
+    private void openInitialTiles()
+    {
+        for(int i = 0; i < height; i++)
+        {
+            for(int j = 0; j < width; j++)
+            {
+                if(mineBoard[i][j] == 0)
+                {
+                    removeFromUncheckedList(j, i);
+                    discoveryBoard[i][j] = '0';
+                    openOtherOpenTiles(j, i);
+                    return;
+                }
+            }
+        }
+    }
+    private void removeFromUncheckedList(int x, int y)
+    {
+        for(int j = 0; j < emptyTiles.size(); j++)
+        {
+            if(emptyTiles.get(j)[1] == y && emptyTiles.get(j)[0] == x)
+                {
+                    emptyTiles.remove(j);
+                    break;
+                }
+        }
+    }
+    private void openOtherOpenTiles(int x, int y)
+    {
+        int[][] pos = 
+        {
+            {x-1,y},
+            {x+1,y},
+            {x,y-1},
+            {x,y+1},
+            {x+1,y+1},
+            {x-1,y-1},
+            {x-1,y+1},
+            {x+1,y-1}
+        };
+        for (int[] p : pos) 
+        {
+            if((p[0] >= 0 && p[0] < width) && (p[1] >= 0 && p[1] < height))
+            {
+                discoveryBoard[p[1]][p[0]] = Character.forDigit(mineBoard[p[1]][p[0]],10);
+                removeFromUncheckedList(p[0], p[1]);
+                if(mineBoard[p[1]][p[0]] == 0 && discoveryBoard[p[1]][p[0]] == '.')
+                    openOtherOpenTiles(p[0], p[1]);
+            }
+        }
+    }
+    public boolean uncoverTile(int x, int y)
+    {
+        if(mineBoard[y][x] == -1)
+        {
+            System.out.println("/nKABOOM!/n");
+            revealAllMines();
+            printDiscoveredBoard();
+            return true;
+        }
+        else if(mineBoard[y][x] == 0)
+        {
+            removeFromUncheckedList(x, y);
+            discoveryBoard[y][x] = '0';
+            openOtherOpenTiles(x, y);
+            printDiscoveredBoard();
+        }
+        else
+        {
+            removeFromUncheckedList(x, y);
+            discoveryBoard[y][x] = Character.forDigit(mineBoard[y][x], 10);
+            printDiscoveredBoard();
+        }
+        return false;
+    }
+    private void revealAllMines()
+    {
+        for(int i = 0; i < height; i++)
+        {
+            for(int j = 0; j < width; j++)
+            {
+                if(mineBoard[i][j] == -1)
+                {
+                    discoveryBoard[i][j] = '¤';
+                }
+            }
+        }
+    }
     public int getHeight()
     {
         return height;
@@ -84,5 +173,50 @@ public class MinesweeperMechanics
     public int getNumMines()
     {
         return mineNum;
+    }
+    public void printDiscoveredBoard()
+    {
+        System.out.print("     ");
+        for(int i = 0; i < width; i++)
+        {
+            System.out.print(i%10 + " ");
+        }
+        System.out.println();
+        for(int i = 0; i < height; i++)
+        {
+            if(i < 10)
+                System.out.print(i + "   |");
+            else
+                System.out.print(i + "  |");
+            for(int j = 0; j < width; j++)
+            {
+                System.out.print(discoveryBoard[i][j] + "|");
+            }
+            System.out.println();
+        }
+    }
+    public void printFullBoard()
+    {
+        System.out.print("     ");
+        for(int i = 0; i < width; i++)
+        {
+            System.out.print(i%10 + " ");
+        }
+        System.out.println();
+        for(int i = 0; i < height; i++)
+        {
+            if(i < 10)
+                System.out.print(i + "   |");
+            else
+                System.out.print(i + "  |");
+            for(int j = 0; j < width; j++)
+            {
+                if(mineBoard[i][j] == -1)
+                    System.out.print("+" + "|");
+                else
+                    System.out.print(mineBoard[i][j] + "|");
+            }
+            System.out.println();
+        }
     }
 }
