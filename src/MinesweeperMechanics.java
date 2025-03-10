@@ -6,6 +6,7 @@ public class MinesweeperMechanics
     private final int height;
     private final int mineNum;
     private boolean isPresolved;
+    private int flagCount;
     private int[][] mineBoard;
     private char[][] discoveryBoard;
     private ArrayList<int[]> emptyTiles;
@@ -16,6 +17,7 @@ public class MinesweeperMechanics
         this.height = height;
         this.mineNum = mineNum;
         this.isPresolved = false;
+        this.flagCount = mineNum;
         mineBoard = new int[height][width];
         discoveryBoard = new char[height][width];
         emptyTiles = new ArrayList<>();
@@ -158,7 +160,7 @@ public class MinesweeperMechanics
         };
         for (int[] p : pos) 
         {
-            if((p[0] >= 0 && p[0] < width) && (p[1] >= 0 && p[1] < height) && discoveryBoard[p[1]][p[0]] == '.')
+            if ((p[0] >= 0 && p[0] < width) && (p[1] >= 0 && p[1] < height) && (discoveryBoard[p[1]][p[0]] == '.'))
             {
                 discoveryBoard[p[1]][p[0]] = Character.forDigit(mineBoard[p[1]][p[0]],10);
                 removeFromUncheckedList(p[0], p[1]);
@@ -198,12 +200,21 @@ public class MinesweeperMechanics
     
     public boolean uncoverTile(int x, int y)
     {
+        if(discoveryBoard[y][x] != '.' && discoveryBoard[y][x] != 'F')
+        {
+            System.out.println("Move is invalid, please try again");
+            return true;
+        }
+        else if(discoveryBoard[y][x] == 'F')
+        {
+            flagCount++;
+        }
         if(mineBoard[y][x] == -1)
         {
             System.out.println("\nKABOOM!\n");
             System.out.println("\nGAME OVER!\n");
             revealAllMines();
-            printDiscoveredBoard();
+            printDiscoveredBoard(true);
             return true;
         }
         else if(mineBoard[y][x] == 0)
@@ -225,6 +236,36 @@ public class MinesweeperMechanics
             return true;
         }
         return false;
+    }
+    public void flagTile(int x, int y)
+    {
+        if(flagCount > 0 && discoveryBoard[y][x] == '.')
+        {
+            discoveryBoard[y][x] = 'F';
+            flagCount--;
+            printDiscoveredBoard();
+        }
+        else if(flagCount <= 0)
+        {
+            System.out.println("\nNo flags remaining\n");
+        }
+        else
+        {
+            System.out.println("\nInvalid move, please try again\n");
+        }
+    }
+    public void deflagTile(int x, int y)
+    {
+        if(discoveryBoard[y][x] == 'F')
+        {
+            discoveryBoard[y][x] = '.';
+            flagCount++;
+            printDiscoveredBoard();
+        }
+        else
+        {
+            System.out.println("\nNo flags on this tile\n");
+        }
     }
     private void revealAllMines()
     {
@@ -274,6 +315,31 @@ public class MinesweeperMechanics
                 System.out.print(discoveryBoard[i][j] + "|");
             }
             System.out.println();
+        }
+        System.out.println("You have " + flagCount + " flags left");
+    }
+    private void printDiscoveredBoard(boolean isEnd)
+    {
+        if(isEnd)
+        {
+            System.out.print("     ");
+            for(int i = 0; i < width; i++)
+            {
+                System.out.print(i%10 + " ");
+            }
+            System.out.println();
+            for(int i = 0; i < height; i++)
+            {
+                if(i < 10)
+                    System.out.print(i + "   |");
+                else
+                    System.out.print(i + "  |");
+                for(int j = 0; j < width; j++)
+                {
+                    System.out.print(discoveryBoard[i][j] + "|");
+                }
+                System.out.println();
+            }
         }
     }
     public void printFullBoard()

@@ -49,16 +49,31 @@ public class TerminalInteferace {
                 if(move.equals("option"))
                 {
                     System.out.println("To click on a tile, type:");
-                    System.out.println("uncover [x pos,y pos]");
+                    System.out.println("move [x pos,y pos]");
+                    System.out.println("To flag a tile, type:");
+                    System.out.println("flag [x pos,y pos]");
+                    System.out.println("To deflag a tile, type:");
+                    System.out.println("deflag [x pos,y pos]");
                     continue;
                 }
                 int[] pos = parseMove(move,minesweeper);
                 if(pos != null)
                 {
-                    if(minesweeper.uncoverTile(pos[0],pos[1]))
-                        break;
+                    int command = pos[2];
+                    switch(command)
+                    {   
+                        case 1:
+                            if(minesweeper.uncoverTile(pos[0], pos[1]))
+                                return;
+                            break;                 
+                        case 2:
+                            minesweeper.flagTile(pos[0], pos[1]);
+                            break;
+                        case 3:
+                            minesweeper.deflagTile(pos[0], pos[1]);
+                            break;
+                    }
                 }
-                
             }
         }
         
@@ -98,26 +113,47 @@ public class TerminalInteferace {
     }
     private static int[] parseMove(String move, MinesweeperMechanics minesweeper)
     {
-        if (!move.matches("move \\[\\d+,\\d+\\]"))
+        int width;
+        int height;
+        int commandNum;
+        if (move.matches("\\w+ \\[\\d+,\\d+\\]"))
+        {
+            String commandName = move.split(" ")[0];
+            switch(commandName)
+            {
+                case "move":
+                commandNum = 1; break;
+                case "flag":
+                commandNum = 2; break;
+                case "deflag":
+                commandNum = 3; break;
+                default:
+                System.out.println("Command name was incorrect, please try again");
+                return null;
+            }
+
+            Pattern pattern = Pattern.compile("\\d+,\\d+");
+            Matcher matcher = pattern.matcher(move);
+            if(matcher.find())
+            {
+                move = matcher.group();
+            }
+            String[] tempArr = move.split(",");
+            width = Integer.parseInt(tempArr[0]);
+            height = Integer.parseInt(tempArr[1]);
+            if((width < 0 || width >= minesweeper.getWidth()) || (height < 0 || height >= minesweeper.getHeight()))
+            {
+                System.out.println("Move was out of bounds, please try again");
+                return null;
+            }
+        }
+        else
         {
             System.out.println("\nThe answer does not match the selected format, please try again\n");
             return null;
         }
-        Pattern pattern = Pattern.compile("\\d+,\\d+");
-        Matcher matcher = pattern.matcher(move);
-        if(matcher.find())
-        {
-            move = matcher.group();
-        }
-        String[] tempArr = move.split(",");
-        int width = Integer.parseInt(tempArr[0]);
-        int height = Integer.parseInt(tempArr[1]);
-        if((width < 0 || width >= minesweeper.getWidth()) || (height < 0 || height >= minesweeper.getHeight()))
-        {
-            System.out.println("Move was out of bounds, please try again");
-            return null;
-        }
-        int[] pos = {width,height};
+        
+        int[] pos = {width,height,commandNum};
         return pos;
     }
 }
